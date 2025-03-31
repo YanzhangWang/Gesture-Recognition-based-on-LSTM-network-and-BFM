@@ -86,7 +86,19 @@ Then, run the learning model through:
 
 `python learning.py <'directory of the beamforming feedback matrices dataset'> <'ID of the beamformee position in {1, ..., 9}'> <'name for the model to be saved'> <'number of transmitter antennas'> <'number of receiver antennas'> <'indices of the transmitter antennas to consider, comma separated'> <'indices of the receiver antennas to consider, comma separated'> <'bandwidth'> <'name of network model'> <'prefix to identify the data'> <'scenario considered in {S1, S2, S3, S4, S4_diff, S5, S6, hyper}'>`
 
+Here choose the network model, scenario and saved model name to the network_model folder. 
 
+Moreover, there is also test model accuracy section in the code design, which means it will output the accuracy of model after learning. eg.
+
+![Figure_1](Picture/Figure_1.png)
 
 ## Predict model
+
+After getting the h5 file in the network folder, it can be used to predict the gesture types through:
+
+`python predictd.py </path/to/model.h5> </path/to/data.npy>`
+
+Moreover, there is also a predict_live model:
+
+`python predict_live.py <--model_path models/prototype_v2.h5> <--support_dir data/reference_set> <--watch_dir data/incoming> <--pattern "*.npy"> <--verbose> <--num_classes>`
 
