@@ -18,7 +18,11 @@ Our system utilizes ambient WiFi signals to extract BFI features that capture va
 - Iperf3
 - iwconfig
 
-WiFi details
+### WiFi details
+
+- AC 
+- 80MHz 
+- SU-MIMO
 
 ## Recognition system Framework
 
@@ -102,3 +106,12 @@ Moreover, there is also a predict_live model:
 
 `python predict_live.py <--model_path models/prototype_v2.h5> <--support_dir data/reference_set> <--watch_dir data/incoming> <--pattern "*.npy"> <--verbose> <--num_classes>`
 
+## UI
+
+Integrate the above prediction model with the V matrix visual output thourgh:
+
+`python GestureUI.py <--standard AC> <--mimo SU> <--config 3x3> <--bw 80> <--MAC A1:B2:C3:D4:E5:F6> <--dir /path/to/data> <--seconds_interval 5>`
+
+The sample Ui is like:
+
+![UI](Picture/UI.png)
