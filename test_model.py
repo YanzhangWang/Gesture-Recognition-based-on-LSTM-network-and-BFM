@@ -13,44 +13,44 @@ def evaluate_model(model: tf.keras.Model,
                   steps: int, 
                   class_names: List[str],
                   history: Optional[tf.keras.callbacks.History] = None,
-                  title: str = "模型评估结果") -> Dict:
+                  title: str = "Model Evaluation Results") -> Dict:
     """
-    全面评估模型性能并可视化结果
+    Comprehensively evaluate model performance and visualize results
     
-    参数:
-    - model: 训练好的Keras模型
-    - dataset: 评估的数据集 (通常是测试集)
-    - steps: 评估步数 (通常是测试集样本数/批次大小的上限)
-    - class_names: 类别名称列表
-    - history: 模型训练历史对象 (用于过拟合/欠拟合分析)
-    - title: 结果可视化标题
+    Parameters:
+    - model: Trained Keras model
+    - dataset: Evaluation dataset (usually test set)
+    - steps: Evaluation steps (usually test set samples/batch size limit)
+    - class_names: List of class names
+    - history: Model training history object (for overfitting/underfitting analysis)
+    - title: Results visualization title
     
-    返回:
-    - 包含各种评估指标的字典
+    Returns:
+    - Dictionary containing various evaluation metrics
     """
-    # 1. 获取预测结果
+    # 1. Get prediction results
     print(f"processing...")
     y_pred_prob = model.predict(dataset, steps=steps)
     y_pred = np.argmax(y_pred_prob, axis=1)
     
-    # 获取真实标签
+    # Get true labels
     y_true = []
     for _, labels in dataset.take(steps):
         y_true.extend(labels.numpy())
-    y_true = np.array(y_true[:len(y_pred)])  # 裁剪到相同长度
+    y_true = np.array(y_true[:len(y_pred)])  # Truncate to same length
     
-    # 2. 计算基本指标
+    # 2. Calculate basic metrics
     accuracy = accuracy_score(y_true, y_pred)
     precision, recall, f1, support = precision_recall_fscore_support(
         y_true, y_pred, average=None, labels=range(len(class_names)))
     
-    # 计算宏平均和加权平均
+    # Calculate macro average and weighted average
     macro_precision, macro_recall, macro_f1, _ = precision_recall_fscore_support(
         y_true, y_pred, average='macro')
     weighted_precision, weighted_recall, weighted_f1, _ = precision_recall_fscore_support(
         y_true, y_pred, average='weighted')
     
-    # 3. 创建结果字典
+    # 3. Create results dictionary
     results = {
         'accuracy': accuracy,
         'class_precision': dict(zip(class_names, precision)),
@@ -65,11 +65,11 @@ def evaluate_model(model: tf.keras.Model,
         'weighted_f1': weighted_f1
     }
     
-    # 4. 可视化结果
+    # 4. Visualize results
     visualize_results(y_true, y_pred, y_pred_prob, class_names, 
                       history=history, title=title)
     
-    # 5. 打印详细报告
+    # 5. Print detailed report
     print("\nClassification Report:")
     print(classification_report(y_true, y_pred, target_names=class_names))
     
@@ -87,27 +87,27 @@ def visualize_results(y_true: np.ndarray,
                      history: Optional[tf.keras.callbacks.History] = None,
                      title: str = "Model Evaluation Result"):
     """
-    可视化模型评估结果
+    Visualize model evaluation results
     
-    参数:
-    - y_true: 真实标签数组
-    - y_pred: 预测标签数组
-    - y_pred_prob: 预测概率数组
-    - class_names: 类别名称列表
-    - history: 模型训练历史对象
-    - title: 可视化标题
+    Parameters:
+    - y_true: True label array
+    - y_pred: Predicted label array
+    - y_pred_prob: Prediction probability array
+    - class_names: List of class names
+    - history: Model training history object
+    - title: Visualization title
     """
     # Set up fonts for English labels
     plt.style.use('default')
     plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'DejaVu Sans']
     
-    # 创建子图布局
+    # Create subplot layout
     n_plots = 3 if history is not None else 2
     fig = plt.figure(figsize=(15, 5 * n_plots))
     fig.suptitle(title, fontsize=16)
     
-    # 1. 绘制混淆矩阵
+    # 1. Plot confusion matrix
     ax1 = fig.add_subplot(n_plots, 2, 1)
     cm = confusion_matrix(y_true, y_pred)
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -118,10 +118,10 @@ def visualize_results(y_true: np.ndarray,
     ax1.set_ylabel('True Label')
     ax1.set_xlabel('Predicted Label')
     
-    # 2. 绘制每个类别的准确率、精确率、召回率和F1分数
+    # 2. Plot accuracy, precision, recall and F1 score for each class
     ax2 = fig.add_subplot(n_plots, 2, 2)
     
-    # 计算每个类别的指标
+    # Calculate metrics for each class
     metrics_per_class = {}
     for i, class_name in enumerate(class_names):
         true_positives = np.sum((y_true == i) & (y_pred == i))
@@ -138,7 +138,7 @@ def visualize_results(y_true: np.ndarray,
             'F1 Score': f1
         }
     
-    # 创建 DataFrame 并可视化
+    # Create DataFrame and visualize
     metrics_df = pd.DataFrame(metrics_per_class).T
     metrics_df.plot(kind='bar', ax=ax2)
     ax2.set_title('Performance Metrics by Class')
@@ -146,9 +146,9 @@ def visualize_results(y_true: np.ndarray,
     ax2.set_ylim([0, 1])
     ax2.legend(loc='lower right')
     
-    # 3. 如果提供了训练历史，绘制学习曲线进行过拟合/欠拟合分析
+    # 3. If training history is provided, plot learning curves for overfitting/underfitting analysis
     if history is not None:
-        # 准确率曲线
+        # Accuracy curve
         ax3 = fig.add_subplot(n_plots, 2, 3)
         ax3.plot(history.history['sparse_categorical_accuracy'], label='Train accuracy')
         ax3.plot(history.history['val_sparse_categorical_accuracy'], label='Var accuracy')
@@ -157,7 +157,7 @@ def visualize_results(y_true: np.ndarray,
         ax3.set_xlabel('Epoch')
         ax3.legend(loc='lower right')
         
-        # 损失曲线
+        # Loss curve
         ax4 = fig.add_subplot(n_plots, 2, 4)
         ax4.plot(history.history['loss'], label='Train loss')
         ax4.plot(history.history['val_loss'], label='Var loss')
@@ -166,10 +166,10 @@ def visualize_results(y_true: np.ndarray,
         ax4.set_xlabel('Epoch')
         ax4.legend(loc='upper right')
         
-        # 过拟合/欠拟合分析
+        # Overfitting/underfitting analysis
         ax5 = fig.add_subplot(n_plots, 2, 5)
         
-        # 计算训练和验证之间的差距
+        # Calculate gap between training and validation
         train_acc = history.history['sparse_categorical_accuracy']
         val_acc = history.history['val_sparse_categorical_accuracy']
         acc_diff = [train - val for train, val in zip(train_acc, val_acc)]
@@ -188,7 +188,7 @@ def visualize_results(y_true: np.ndarray,
         ax5.set_xlabel('Epoch')
         ax5.legend()
         
-        # 添加过拟合分析文字说明
+        # Add overfitting analysis text description
         ax6 = fig.add_subplot(n_plots, 2, 6)
         ax6.axis('off')
         
@@ -217,13 +217,13 @@ def visualize_results(y_true: np.ndarray,
 
 def detect_overfitting(history: tf.keras.callbacks.History) -> str:
     """
-    分析训练历史，检测过拟合/欠拟合
+    Analyze training history, detect overfitting/underfitting
     
-    参数:
-    - history: 模型训练历史对象
+    Parameters:
+    - history: Model training history object
     
-    返回:
-    - 过拟合/欠拟合状态分析字符串
+    Returns:
+    - Overfitting/underfitting status analysis string
     """
     train_acc = history.history['sparse_categorical_accuracy']
     val_acc = history.history['val_sparse_categorical_accuracy']
@@ -231,12 +231,12 @@ def detect_overfitting(history: tf.keras.callbacks.History) -> str:
     train_loss = history.history['loss']
     val_loss = history.history['val_loss']
     
-    # 计算训练后期的差距
+    # Calculate gaps in late epochs
     late_epochs = len(train_acc) // 3
     late_acc_diff = np.mean([t - v for t, v in zip(train_acc[-late_epochs:], val_acc[-late_epochs:])])
     late_loss_diff = np.mean([v - t for t, v in zip(train_loss[-late_epochs:], val_loss[-late_epochs:])])
     
-    # 判断过拟合/欠拟合
+    # Determine overfitting/underfitting
     if late_acc_diff > 0.1 or late_loss_diff > 0.1:
         status = "Overfitting"
         level = "Severe" if (late_acc_diff > 0.2 or late_loss_diff > 0.2) else "Mild"
@@ -272,33 +272,33 @@ def compare_models(models: List[tf.keras.Model],
                   steps: int,
                   class_names: List[str]) -> None:
     """
-    比较多个模型的性能
+    Compare performance of multiple models
     
-    参数:
-    - models: 训练好的模型列表
-    - names: 模型名称列表
-    - test_dataset: 测试数据集
-    - steps: 测试步数
-    - class_names: 类别名称列表
+    Parameters:
+    - models: List of trained models
+    - names: List of model names
+    - test_dataset: Test dataset
+    - steps: Test steps
+    - class_names: List of class names
     """
-    # 获取真实标签
+    # Get true labels
     y_true = []
     for _, labels in test_dataset.take(steps):
         y_true.extend(labels.numpy())
     y_true = np.array(y_true)
     
-    # 收集结果
+    # Collect results
     results = []
     
     for model, name in zip(models, names):
-        print(f"\n评估模型: {name}")
+        print(f"\nEvaluating model: {name}")
         y_pred_prob = model.predict(test_dataset, steps=steps)
         y_pred = np.argmax(y_pred_prob, axis=1)
         
-        # 截取到相同长度
+        # Truncate to same length
         y_pred = y_pred[:len(y_true)]
         
-        # 计算指标
+        # Calculate metrics
         accuracy = accuracy_score(y_true, y_pred)
         macro_precision, macro_recall, macro_f1, _ = precision_recall_fscore_support(
             y_true, y_pred, average='macro')
@@ -312,9 +312,9 @@ def compare_models(models: List[tf.keras.Model],
             'y_pred': y_pred
         })
         
-        print(f"准确率: {accuracy:.4f}, F1分数: {macro_f1:.4f}")
+        print(f"Accuracy: {accuracy:.4f}, F1 Score: {macro_f1:.4f}")
     
-    # 可视化比较
+    # Visualize comparison
     plt.figure(figsize=(12, 6))
     metrics = ['accuracy', 'macro_precision', 'macro_recall', 'macro_f1']
     metrics_names = ['Accuracy', 'Precision (Macro)', 'Recall (Macro)', 'F1 Score (Macro)']
@@ -335,7 +335,7 @@ def compare_models(models: List[tf.keras.Model],
     plt.tight_layout()
     plt.show()
     
-    # 比较混淆矩阵
+    # Compare confusion matrices
     fig, axes = plt.subplots(1, len(models), figsize=(5 * len(models), 5))
     if len(models) == 1:
         axes = [axes]
@@ -359,15 +359,15 @@ def model_diagnostics(model: tf.keras.Model,
                      steps: int,
                      class_names: List[str]) -> None:
     """
-    对模型性能进行详细诊断，分析误分类样本
+    Perform detailed diagnostics on model performance, analyze misclassified samples
     
-    参数:
-    - model: 训练好的模型
-    - test_dataset: 测试数据集
-    - steps: 测试步数
-    - class_names: 类别名称列表
+    Parameters:
+    - model: Trained model
+    - test_dataset: Test dataset
+    - steps: Test steps
+    - class_names: List of class names
     """
-    # 收集预测和真实标签
+    # Collect predictions and true labels
     all_samples = []
     all_labels = []
     for samples, labels in test_dataset.take(steps):
@@ -377,25 +377,25 @@ def model_diagnostics(model: tf.keras.Model,
     all_samples = np.vstack(all_samples)
     all_labels = np.concatenate(all_labels)
     
-    # 获取预测结果
+    # Get prediction results
     y_pred_prob = model.predict(test_dataset, steps=steps)
     y_pred = np.argmax(y_pred_prob, axis=1)
     
-    # 裁剪到相同长度
+    # Truncate to same length
     all_samples = all_samples[:len(y_pred)]
     all_labels = all_labels[:len(y_pred)]
     
-    # 计算预测的确定性（概率最大值）
+    # Calculate prediction certainty (maximum probability)
     certainty = np.max(y_pred_prob, axis=1)
     
-    # 找出误分类的样本
+    # Find misclassified samples
     misclassified = all_labels != y_pred
     
-    # 按确定性排序误分类样本
+    # Sort misclassified samples by certainty
     misclassified_indices = np.where(misclassified)[0]
     misclassified_certainty = certainty[misclassified]
     
-    # 找出最确定的错误和最不确定的错误
+    # Find most certain errors and least certain errors
     if len(misclassified_indices) > 0:
         most_certain_errors = misclassified_indices[np.argsort(-misclassified_certainty)][:5]
         least_certain_errors = misclassified_indices[np.argsort(misclassified_certainty)][:5]
@@ -440,21 +440,3 @@ def model_diagnostics(model: tf.keras.Model,
         print("No misclassified samples found!")
 
 
-# 使用示例
-"""
-# 1. 基本评估
-results = evaluate_model(model, test_dataset, test_steps, class_names, 
-                         history=history, title="模型评估结果")
-
-# 2. 过拟合/欠拟合检测
-fitting_status = detect_overfitting(history)
-print(fitting_status)
-
-# 3. 比较多个模型
-compare_models([model1, model2, model3], 
-               ["基础CNN", "CNN-LSTM", "CNN-LSTM-Attention"], 
-               test_dataset, test_steps, class_names)
-
-# 4. 模型错误诊断
-model_diagnostics(model, test_dataset, test_steps, class_names)
-"""
